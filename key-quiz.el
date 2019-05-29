@@ -38,76 +38,78 @@
 
 (defgroup key-quiz nil
   "Play an Emacs Key Quiz."
-  :prefix "kq-"
+  :prefix "key-quiz-"
   :group 'key-quiz)
 
-(defcustom kq-reverse-hints-count 6
+(defcustom key-quiz-reverse-hints-count 6
   "Number of hints to show when playing in 'reverse mode'."
   :group 'key-quiz
   :type 'integer)
 
-(defcustom kq-partial-answer-score 5
+(defcustom key-quiz-partial-answer-score 5
   "Number of points awarded for each correct part of a key answered."
   :group 'key-quiz
   :type 'integer)
 
-(defcustom kq-wrong-answer-score -10
+(defcustom key-quiz-wrong-answer-score -10
   "Penalty for answering a question incorrectly."
   :group 'key-quiz
   :type 'integer)
 
-(defcustom kq-game-length 20
+(defcustom key-quiz-game-length 20
   "Number of questions per game."
   :group 'key-quiz
   :type 'integer)
 
-(defvar-local kq--keys nil
+(defvar-local key-quiz--keys nil
   "Currently loaded keys and commands.")
 
-(defvar-local kq--score 0
+(defvar-local key-quiz--score 0
   "Current score.")
 
-(defvar-local kq--game-reverse nil
+(defvar-local key-quiz--game-reverse nil
   "Non-nil if currently playing in 'reverse mode'.")
 
-(defvar-local kq--round 0
+(defvar-local key-quiz--round 0
   "Current round number.")
 
-(defface kq-question '((t :weight bold))
+(defface key-quiz-question '((t :weight bold))
   "Face for Key Quiz questions.")
 
-(defface kq-correct '((t :foreground "lime green"
-			 :weight bold))
+(defface key-quiz-correct '((t :foreground "lime green"
+			       :weight bold))
   "Face for Key Quiz correct answers.")
 
-(defface kq-partial '((t :foreground "gold2"
-			 :weight bold))
+(defface key-quiz-partial '((t :foreground "gold2"
+			       :weight bold))
   "Face for Key Quiz partially correct answers.")
 
-(defface kq-wrong '((t :foreground "firebrick1"))
+(defface key-quiz-wrong '((t :foreground "firebrick1"))
   "Face for Key Quiz wrong answers.")
 
-(defface kq-answer '((t :foreground "DodgerBlue1"
-			:weight bold))
+(defface key-quiz-answer '((t :foreground "DodgerBlue1"
+			      :weight bold))
   "Face for Key Quiz provided answers.")
 
 (defvar key-quiz-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "r") 'kq--restart)
+    (define-key map (kbd "r") 'key-quiz--restart)
     map))
 
 (define-derived-mode key-quiz-mode special-mode "Key Quiz"
-  "Key Quiz mode.  Shows current score and more information on the header line."
+  "Key Quiz mode.
+Shows current score and more information on the header line."
   (setq header-line-format
-	'((:eval (propertize (format "Score: %s" (int-to-string kq--score))
+	'((:eval (propertize (format "Score: %s"
+				     (int-to-string key-quiz--score))
 			     'font-lock-face 'bold))
 	  " - Use 'C-g r' to restart the game, 'C-g q' to quit")))
 
-(defun kq--get-keys ()
+(defun key-quiz--get-keys ()
   "Return an alist of (KEY . COMMAND), representing active keybindings.
-Many keys and commands are filtered out to only include
-those which the player is likely to remember or guess correctly.  The
-initial key list is generated using `describe-buffer-bindings' on
+Many keys and commands are filtered out to only include those which
+the player is likely to remember or guess correctly.  The initial key
+list is generated using `describe-buffer-bindings' on
 `fundamental-mode'."
   (let (keys)
     (with-temp-buffer
@@ -128,7 +130,7 @@ initial key list is generated using `describe-buffer-bindings' on
 	(forward-line 1)))
     keys))
 
-(defun kq--shuffle-list (list)
+(defun key-quiz--shuffle-list (list)
   "Shuffles LIST randomly, modying it in-place."
   (dolist (i (reverse (number-sequence 1 (1- (length list)))))
     (let ((j (random (1+ i)))
@@ -137,7 +139,7 @@ initial key list is generated using `describe-buffer-bindings' on
       (setf (elt list j) tmp)))
   list)
 
-(defun kq--insert-separator ()
+(defun key-quiz--insert-separator ()
   "Insert a horizontal separator in the current buffer."
   (newline)
   (insert (propertize (make-string (window-width) ? )
@@ -145,45 +147,45 @@ initial key list is generated using `describe-buffer-bindings' on
 		      'rear-nonsticky t))
   (newline))
 
-(defun kq--keys-distance (k1 k2)
+(defun key-quiz--keys-distance (k1 k2)
   "Return (NUMBER . EQUALS).
 NUMBER is the amount of inputs K1 and K2
 share, and EQUALS is (string= K1 K2)."
-       (if (not (string= k1 k2))
-	   (let ((l1 (split-string k1))
-		 (l2 (split-string k2))
-		 (matches 0))
-	     (dotimes (i (length l1))
-	       (when (and (< i (length k2))
-			  (string= (nth i l1)
-				   (nth i l2)))
-		 (setq matches (1+ matches))))
-	     (cons matches nil))
-	 (cons (length (split-string k1)) t)))
+  (if (not (string= k1 k2))
+      (let ((l1 (split-string k1))
+	    (l2 (split-string k2))
+	    (matches 0))
+	(dotimes (i (length l1))
+	  (when (and (< i (length k2))
+		     (string= (nth i l1)
+			      (nth i l2)))
+	    (setq matches (1+ matches))))
+	(cons matches nil))
+    (cons (length (split-string k1)) t)))
 
-(defun kq--ask ()
+(defun key-quiz--ask ()
   "Prompt the user for a key corresponding to a command.
-A random element from `kq--keys' is chosen, and the user is shown the
-chosen command.  The user must then guess one of the keys
+A random element from `key-quiz--keys' is chosen, and the user is
+shown the chosen command.  The user must then guess one of the keys
 corresponding to the command (as there may be more than one).
 Finally, return (SCORE . CORRECT-ANSWER), where SCORE is a number
-\(positive or negative) which should be added to `kq--score', and
-CORRECT-ANSWER is the correct answer in case the user did not answer
-correctly, or nil otherwise."
-  (let* ((pair (seq-random-elt kq--keys))
+\(positive or negative) which should be added to `key-quiz--score',
+and CORRECT-ANSWER is the correct answer in case the user did not
+answer correctly, or nil otherwise."
+  (let* ((pair (seq-random-elt key-quiz--keys))
 	 (command (cdr pair))
 	 ;; One command may be bound to multiple keys, fetch them all.
 	 (keys (mapcar 'car (seq-filter (lambda (p)
 					  (string= (cdr p) command))
-					kq--keys)))
+					key-quiz--keys)))
 	 (all-keys (mapconcat 'identity keys " or "))
 	 (best-matches nil)
 	 result
 	 entered-key)
     (dolist (key keys)
-      (setq kq--keys (assoc-delete-all key kq--keys)))
+      (setq key-quiz--keys (assoc-delete-all key key-quiz--keys)))
     (insert (format "Enter key for command: %s"
-		    (propertize command 'font-lock-face 'kq-question)))
+		    (propertize command 'font-lock-face 'key-quiz-question)))
     (newline)
     (when (> (length keys) 1)
       (insert (format "There are %s possible answers." (length keys)))
@@ -195,39 +197,40 @@ correctly, or nil otherwise."
       (throw 'end t))
     (insert entered-key)
     (dolist (key keys)
-      (let* ((matches-total (kq--keys-distance entered-key key))
+      (let* ((matches-total (key-quiz--keys-distance entered-key key))
 	     (matches (car matches-total))
 	     (is-total (cdr matches-total)))
 	(if (or (not best-matches)
 		(< best-matches matches)
 		is-total)
-	    (setq result (cons (* matches kq-partial-answer-score)
+	    (setq result (cons (* matches key-quiz-partial-answer-score)
 			       (unless is-total all-keys))
 		  best-matches matches))))
     result))
 
-(defun kq--ask-reverse ()
+(defun key-quiz--ask-reverse ()
   "Prompt the user for a command corresponding to a key ('reverse mode').
-A random element from `kq--keys' is chosen, and the user is shown the
-chosen key.  The user must then guess the command corresponding to the
-key.  Finally, return (SCORE . CORRECT-ANSWER), where SCORE is a number
-\(positive or negative) which should be added to `kq--score', and
-CORRECT-ANSWER is the correct answer in case the user did not answer
-correctly, or nil otherwise."
-  (let* ((pair (seq-random-elt kq--keys))
+A random element from `key-quiz--keys' is chosen, and the user is
+shown the chosen key.  The user must then guess the command
+corresponding to the key.  Finally, return (SCORE . CORRECT-ANSWER),
+where SCORE is a number (positive or negative) which should be added
+to `key-quiz--score', and CORRECT-ANSWER is the correct answer in case
+the user did not answer correctly, or nil otherwise."
+  (let* ((pair (seq-random-elt key-quiz--keys))
 	 (key (car pair))
 	 (command (cdr pair))
 	 entered-command
 	 hints)
-    (setq kq--keys (assoc-delete-all key kq--keys)
-	  hints (mapcar 'cdr (cl-subseq (kq--shuffle-list (copy-sequence kq--keys))
-					0 (min (length kq--keys)
-					       (1- kq-reverse-hints-count)))))
+    (setq key-quiz--keys (assoc-delete-all key key-quiz--keys)
+	  hints (mapcar 'cdr (cl-subseq (key-quiz--shuffle-list (copy-sequence
+								 key-quiz--keys))
+					0 (min (length key-quiz--keys)
+					       (1- key-quiz-reverse-hints-count)))))
     (when hints
       (push command hints)
-      (kq--shuffle-list hints))
+      (key-quiz--shuffle-list hints))
     (insert (format "Enter command for key: %s "
-		    (propertize key 'font-lock-face 'kq-question)))
+		    (propertize key 'font-lock-face 'key-quiz-question)))
     (newline)
     (insert "Your answer: ")
     ;; TODO: Handle C-g correctly
@@ -237,17 +240,18 @@ correctly, or nil otherwise."
       (throw 'end t))
     (insert entered-command)
     (if (string= entered-command command)
-	(cons (* (length (split-string key)) kq-partial-answer-score) nil)
-      (cons kq-wrong-answer-score command))))
+	(cons (* (length (split-string key)) key-quiz-partial-answer-score)
+	      nil)
+      (cons key-quiz-wrong-answer-score command))))
 
-(defun kq--game-loop (ask-fn)
-  "Iterate until `kq-game-length' rounds have passed.
+(defun key-quiz--game-loop (ask-fn)
+  "Iterate until `key-quiz-game-length' rounds have passed.
 Ask the user questions using ASK-FN, which should be a function
 returing (SCORE . CORRECT-ANSWER)."
   (catch 'end
     (while t
-      (when (or (= 0 (length kq--keys))
-		(= kq--round kq-game-length))
+      (when (or (= 0 (length key-quiz--keys))
+		(= key-quiz--round key-quiz-game-length))
 	(throw 'end nil))
       (let* ((results (funcall ask-fn))
 	     (score (car results))
@@ -256,36 +260,40 @@ returing (SCORE . CORRECT-ANSWER)."
 	(if correct-answer
 	    (progn
 	      (insert (propertize (if (< 0 score) "Almost correct!" "Wrong!")
-				    'font-lock-face
-				    (if (< 0 score) 'kq-partial 'kq-wrong)))
+				  'font-lock-face
+				  (if (< 0 score)
+				      'key-quiz-partial
+				    'key-quiz-wrong)))
 	      (newline)
 	      (insert (format "Correct answer was: %s"
-			      (propertize correct-answer 'font-lock-face 'kq-answer))))
-	  (insert (propertize "Correct!" 'font-lock-face 'kq-correct)))
-	(setq kq--score (max 0 (+ kq--score score))
-	      kq--round (1+ kq--round)))
-      (kq--insert-separator)
+			      (propertize correct-answer
+					  'font-lock-face 'key-quiz-answer))))
+	  (insert (propertize "Correct!"
+			      'font-lock-face 'key-quiz-correct)))
+	(setq key-quiz--score (max 0 (+ key-quiz--score score))
+	      key-quiz--round (1+ key-quiz--round)))
+      (key-quiz--insert-separator)
       (newline)))
   (newline 2)
-  (insert (propertize (format "Game ended. Score: %s" kq--score)
+  (insert (propertize (format "Game ended. Score: %s" key-quiz--score)
 		      'font-lock-face 'bold))
   (newline)
   (insert "Press 'r' to start a new game."))
 
-(defun kq--restart (&optional reverse)
+(defun key-quiz--restart (&optional reverse)
   "Restart the current game.
 If REVERSE is non-nil, play the game in 'reverse mode'."
   (interactive)
-  (setq kq--keys (kq--get-keys)
-	kq--score 0
-	kq--round 0)
+  (setq key-quiz--keys (key-quiz--get-keys)
+	key-quiz--score 0
+	key-quiz--round 0)
   (let ((inhibit-read-only t))
     (erase-buffer)
-    (insert (format "%s keys/commands loaded." (length kq--keys)))
+    (insert (format "%s keys/commands loaded." (length key-quiz--keys)))
     (newline 2)
-    (kq--game-loop (if (or reverse kq--game-reverse)
-		       'kq--ask-reverse
-		     'kq--ask))))
+    (key-quiz--game-loop (if (or reverse key-quiz--game-reverse)
+			     'key-quiz--ask-reverse
+			   'key-quiz--ask))))
 
 ;;;###autoload
 (defun key-quiz (reverse)
@@ -313,8 +321,8 @@ Instructions:
       (unless (derived-mode-p 'key-quiz-mode)
 	(key-quiz-mode))
       (switch-to-buffer buffer)
-      (setq kq--game-reverse reverse)
-      (kq--restart reverse))))
+      (setq key-quiz--game-reverse reverse)
+      (key-quiz--restart reverse))))
 
 (provide 'key-quiz)
 ;;; key-quiz.el ends here

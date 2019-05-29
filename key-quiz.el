@@ -183,7 +183,8 @@ answer correctly, or nil otherwise."
 	 result
 	 entered-key)
     (dolist (key keys)
-      (setq key-quiz--keys (assoc-delete-all key key-quiz--keys)))
+      (setf key-quiz--keys (cl-delete key key-quiz--keys
+				      :key #'car :test #'equal)))
     (insert (format "Enter key for command: %s"
 		    (propertize command 'font-lock-face 'key-quiz-question)))
     (newline)
@@ -221,8 +222,8 @@ the user did not answer correctly, or nil otherwise."
 	 (command (cdr pair))
 	 entered-command
 	 hints)
-    (setq key-quiz--keys (assoc-delete-all key key-quiz--keys)
-	  hints (mapcar 'cdr (cl-subseq (key-quiz--shuffle-list (copy-sequence
+    (setf key-quiz--keys (cl-delete key key-quiz--keys :key #'car :test #'equal))
+    (setq hints (mapcar 'cdr (cl-subseq (key-quiz--shuffle-list (copy-sequence
 								 key-quiz--keys))
 					0 (min (length key-quiz--keys)
 					       (1- key-quiz-reverse-hints-count)))))

@@ -237,8 +237,6 @@ the user did not answer correctly, or nil otherwise."
     ;; TODO: Handle C-g correctly
     (setq entered-command (completing-read "Command (TAB to view hints): "
 					   hints))
-    (when (string= entered-command "")
-      (throw 'end t))
     (insert entered-command)
     (if (string= entered-command command)
 	(cons (* (length (split-string key)) key-quiz-partial-answer-score)

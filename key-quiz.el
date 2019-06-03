@@ -39,26 +39,22 @@
 (defgroup key-quiz nil
   "Play an Emacs Key Quiz."
   :prefix "key-quiz-"
-  :group 'key-quiz)
+  :group 'games)
 
 (defcustom key-quiz-reverse-hints-count 6
   "Number of hints to show when playing in 'reverse mode'."
-  :group 'key-quiz
   :type 'integer)
 
 (defcustom key-quiz-partial-answer-score 5
   "Number of points awarded for each correct part of a key answered."
-  :group 'key-quiz
   :type 'integer)
 
 (defcustom key-quiz-wrong-answer-score -10
   "Penalty for answering a question incorrectly."
-  :group 'key-quiz
   :type 'integer)
 
 (defcustom key-quiz-game-length 20
   "Number of questions per game."
-  :group 'key-quiz
   :type 'integer)
 
 (defvar-local key-quiz--keys nil
@@ -73,21 +69,22 @@
 (defvar-local key-quiz--round 0
   "Current round number.")
 
-(defface key-quiz-question '((t :weight bold))
+(defface key-quiz-question '((t :inherit bold))
   "Face for Key Quiz questions.")
 
-(defface key-quiz-correct '((t :foreground "lime green"
+(defface key-quiz-correct '((t :inherit success
 			       :weight bold))
   "Face for Key Quiz correct answers.")
 
-(defface key-quiz-partial '((t :foreground "gold2"
+(defface key-quiz-partial '((t :inherit warning
 			       :weight bold))
   "Face for Key Quiz partially correct answers.")
 
-(defface key-quiz-wrong '((t :foreground "firebrick1"))
+(defface key-quiz-wrong '((t :inherit error
+			     :weight normal))
   "Face for Key Quiz wrong answers.")
 
-(defface key-quiz-answer '((t :foreground "DodgerBlue1"
+(defface key-quiz-answer '((t :inherit minibuffer-prompt
 			      :weight bold))
   "Face for Key Quiz provided answers.")
 

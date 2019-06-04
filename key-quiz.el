@@ -35,6 +35,7 @@
 (require 'subr-x)
 (require 'seq)
 (require 'cl-lib)
+(require 'gamegrid)
 
 (defgroup key-quiz nil
   "Play an Emacs Key Quiz."
@@ -78,6 +79,9 @@
 
 (defvar-local key-quiz--prompt-pos nil
   "Buffer position of last prompt. Used when deleting Pause text.")
+
+(defvar-local key-quiz--score-file "key-quiz-scores"
+  "File for holding Key Quiz high scores.")
 
 (defface key-quiz-question '((t :inherit bold))
   "Face for Key Quiz questions.")
@@ -327,6 +331,9 @@ returning (SCORE . CORRECT-ANSWER)."
 	  (newline)
 	  (insert "Press 'c' to resume the game, 'r' to restart it.")
 	  (message nil)) ; Clear minibuffer
+      (unless exit-code
+	;; If game loop exited normally, update high scores.
+	(gamegrid-add-score key-quiz--score-file key-quiz--score))
       (insert (propertize (format "Game ended. Score: %s" key-quiz--score)
 			  'font-lock-face 'bold))
       (newline)

@@ -57,6 +57,10 @@
   "Number of questions per game."
   :type 'integer)
 
+(defcustom key-quiz--mode 'fundamental-mode
+  "Mode to use when fetching key list."
+  :type 'function)
+
 (defvar-local key-quiz--keys nil
   "Currently loaded keys and commands.")
 
@@ -119,7 +123,7 @@ list is generated using `describe-buffer-bindings' on
 `fundamental-mode'."
   (let (keys)
     (with-temp-buffer
-      (fundamental-mode)
+      (funcall key-quiz--mode)
       (describe-buffer-bindings (current-buffer))
       (goto-char (point-min))
       (delete-non-matching-lines "^<?[MC]")
@@ -326,7 +330,7 @@ returning (SCORE . CORRECT-ANSWER)."
       (insert (propertize (format "Game ended. Score: %s" key-quiz--score)
 			  'font-lock-face 'bold))
       (newline)
-      (insert "Press 'r' to start a new game."))))
+      (insert "Press 'r' to start a new game, 'q' to exit."))))
 
 (defun key-quiz--resume ()
   "Resume a paused game."

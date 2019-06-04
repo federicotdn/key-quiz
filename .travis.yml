@@ -1,0 +1,22 @@
+# From: https://github.com/npostavs/emacs-travis
+
+language: generic
+sudo: false
+
+env:
+  matrix:
+    - EMACS_VERSION=25.3
+    - EMACS_VERSION=26.2
+    - EMACS_VERSION=master
+  allow_failures:
+    - env: EMACS_VERSION=master
+
+install:
+  - curl -LO https://github.com/npostavs/emacs-travis/releases/download/bins/emacs-bin-${EMACS_VERSION}.tar.gz
+  - tar -xaf emacs-bin-${EMACS_VERSION}.tar.gz -C /
+  # Configure $PATH: Emacs installed to /tmp/emacs
+  - export PATH=/tmp/emacs/bin:${PATH}
+  - emacs --version
+
+script:
+  - make check

@@ -145,7 +145,8 @@ list is generated using `describe-buffer-bindings' on
     keys))
 
 (defun key-quiz--shuffle-list (list)
-  "Shuffles LIST randomly, modifying it in-place."
+  "Shuffles LIST randomly, modifying it in-place.
+Returns LIST."
   (dolist (i (reverse (number-sequence 1 (1- (length list)))))
     (let ((j (random (1+ i)))
 	  (tmp (elt list i)))

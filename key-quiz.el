@@ -178,6 +178,15 @@ share, and EQUALS is (string= K1 K2)."
 	(cons matches nil))
     (cons (length (split-string k1)) t)))
 
+(defun key-quiz--function-description (fn)
+  "Get a short description of function FN.
+Return a string with the description or nil if no documentation is
+available."
+  (let ((doc (documentation (intern-soft fn))))
+    (when doc
+      (string-match "^\\(.+?\\.\\)" doc)
+      (match-string 1 doc))))
+
 (defun key-quiz--ask ()
   "Prompt the user for a key corresponding to a command.
 A random element from `key-quiz--keys' is chosen, and the user is
@@ -212,9 +221,14 @@ answer correctly, or nil otherwise."
 	(setf key-quiz--keys (cl-delete key key-quiz--keys
 					:key #'car :test #'equal))))
     (setq key-quiz--prompt-pos (point))
-    (insert (format "Enter key for command: %s"
-		    (propertize command 'font-lock-face 'key-quiz-question)))
-    (newline)
+    (insert "Enter key for command:")
+    (newline 2)
+    (insert "    " (propertize command 'font-lock-face 'key-quiz-question))
+    (let ((desc (key-quiz--function-description command)))
+      (when desc
+	(newline)
+	(insert "    " (propertize desc 'font-lock-face 'italic))))
+    (newline 2)
     (when (> (length keys) 1)
       (insert (format "There are %s possible answers." (length keys)))
       (newline))
@@ -226,7 +240,8 @@ answer correctly, or nil otherwise."
      ((string= entered-key "p")
       ;; Save game state for resume.
       (setq key-quiz--last-state (cons pair keys))
-      (throw 'end 'pause)))
+      (throw 'end 'pause))
+     ((string= entered-key "RET") (setq entered-key "")))
     (insert entered-key)
     (dolist (key keys)
       (let* ((matches-total (key-quiz--keys-distance entered-key key))
@@ -344,7 +359,7 @@ returning (SCORE . CORRECT-ANSWER)."
   "Resume a paused game."
   (interactive)
   (unless key-quiz--last-state
-    (error "The game has not been paused"))
+    (error "Can't resume game: no current game"))
   (let ((inhibit-read-only t))
     (delete-region key-quiz--prompt-pos (point-max))
     (setq key-quiz--prompt-pos nil)

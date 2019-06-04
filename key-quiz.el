@@ -69,6 +69,9 @@
 (defvar-local key-quiz--round 0
   "Current round number.")
 
+(defvar-local key-quiz--last-state nil
+  "Last game state. Used for resuming.")
+
 (defface key-quiz-question '((t :inherit bold))
   "Face for Key Quiz questions.")
 
@@ -91,6 +94,9 @@
 (defvar key-quiz-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "r") 'key-quiz--restart)
+    (define-key map (kbd "c") 'key-quiz--resume)
+    (define-key map (kbd "q") 'key-quiz--quit)
+    (define-key map (kbd "RET") 'ignore)
     map))
 
 (define-derived-mode key-quiz-mode special-mode "Key Quiz"
@@ -100,7 +106,7 @@ Shows current score and more information on the header line."
 	'((:eval (propertize (format "Score: %s"
 				     (int-to-string key-quiz--score))
 			     'font-lock-face 'bold))
-	  " - Use 'C-g r' to restart the game, 'C-g q' to quit")))
+	  " - Use 'C-g r' to restart the game, 'p RET' to pause")))
 
 (defun key-quiz--get-keys ()
   "Return an alist of (KEY . COMMAND), representing active keybindings.
@@ -169,19 +175,30 @@ Finally, return (SCORE . CORRECT-ANSWER), where SCORE is a number
 \(positive or negative) which should be added to `key-quiz--score',
 and CORRECT-ANSWER is the correct answer in case the user did not
 answer correctly, or nil otherwise."
-  (let* ((pair (seq-random-elt key-quiz--keys))
+  (let* ((pair (if key-quiz--last-state
+		   (car key-quiz--last-state)
+		 (seq-random-elt key-quiz--keys)))
 	 (command (cdr pair))
-	 ;; One command may be bound to multiple keys, fetch them all.
-	 (keys (mapcar 'car (seq-filter (lambda (p)
-					  (string= (cdr p) command))
-					key-quiz--keys)))
+	 (keys (if key-quiz--last-state
+		   (cdr key-quiz--last-state)
+		 ;; One command may be bound to multiple keys, fetch them all.
+		 (mapcar 'car (seq-filter (lambda (p)
+					    (string= (cdr p) command))
+					  key-quiz--keys))))
 	 (all-keys (mapconcat 'identity keys " or "))
 	 (best-matches nil)
 	 result
 	 entered-key)
-    (dolist (key keys)
-      (setf key-quiz--keys (cl-delete key key-quiz--keys
-				      :key #'car :test #'equal)))
+    (if key-quiz--last-state
+	;; We are resuming, do not modify key list again.
+	(setq key-quiz--last-state nil)
+      ;; First time using this key-command pair.
+      (dolist (key keys)
+	;; Delete all key-command pairs that map to the same command
+	;; from global key-command list. This way we don't ask for the
+	;; same command more than once.
+	(setf key-quiz--keys (cl-delete key key-quiz--keys
+					:key #'car :test #'equal))))
     (insert (format "Enter key for command: %s"
 		    (propertize command 'font-lock-face 'key-quiz-question)))
     (newline)
@@ -191,8 +208,12 @@ answer correctly, or nil otherwise."
     (insert "Your answer: ")
     (setq entered-key (key-description (read-key-sequence-vector
 					"Key (RET to give up): ")))
-    (when (string= entered-key "C-g")
-      (throw 'end t))
+    (cond
+     ((string= entered-key "C-g") (throw 'end t))
+     ((string= entered-key "p")
+      ;; Save game state for resume.
+      (setq key-quiz--last-state (cons pair keys))
+      (throw 'end 'pause)))
     (insert entered-key)
     (dolist (key keys)
       (let* ((matches-total (key-quiz--keys-distance entered-key key))
@@ -214,12 +235,19 @@ corresponding to the key.  Finally, return (SCORE . CORRECT-ANSWER),
 where SCORE is a number (positive or negative) which should be added
 to `key-quiz--score', and CORRECT-ANSWER is the correct answer in case
 the user did not answer correctly, or nil otherwise."
-  (let* ((pair (seq-random-elt key-quiz--keys))
+  (let* ((pair (if key-quiz--last-state
+		   (car key-quiz--last-state)
+		 (seq-random-elt key-quiz--keys)))
 	 (key (car pair))
 	 (command (cdr pair))
 	 entered-command
 	 hints)
-    (setf key-quiz--keys (cl-delete key key-quiz--keys :key #'car :test #'equal))
+    (if key-quiz--last-state
+	;; We are resuming, do not modify key list again.
+	(setq key-quiz--last-state nil)
+      ;; Delete corresponding key-command pair in global list.
+      (setf key-quiz--keys (cl-delete key key-quiz--keys :key #'car :test #'equal)))
+    ;; Randomly select hints.
     (setq hints (mapcar 'cdr (cl-subseq (key-quiz--shuffle-list (copy-sequence
 								 key-quiz--keys))
 					0 (min (length key-quiz--keys)
@@ -234,6 +262,10 @@ the user did not answer correctly, or nil otherwise."
     ;; TODO: Handle C-g correctly
     (setq entered-command (completing-read "Command (TAB to view hints): "
 					   hints))
+    (when (string= entered-command "p")
+      ;; Save game state for resume.
+      (setq key-quiz--last-state (cons pair nil))
+      (throw 'end 'pause))
     (insert entered-command)
     (if (string= entered-command command)
 	(cons (* (length (split-string key)) key-quiz-partial-answer-score)
@@ -243,7 +275,9 @@ the user did not answer correctly, or nil otherwise."
 (defun key-quiz--game-loop (ask-fn)
   "Iterate until `key-quiz-game-length' rounds have passed.
 Ask the user questions using ASK-FN, which should be a function
-returing (SCORE . CORRECT-ANSWER)."
+returing (SCORE . CORRECT-ANSWER).  Return t if the game was
+cancelled, nil if it ended normally, and `pause' if the game was
+paused."
   (catch 'end
     (while t
       (when (or (= 0 (length key-quiz--keys))
@@ -269,12 +303,36 @@ returing (SCORE . CORRECT-ANSWER)."
 	(setq key-quiz--score (max 0 (+ key-quiz--score score))
 	      key-quiz--round (1+ key-quiz--round)))
       (key-quiz--insert-separator)
-      (newline)))
-  (newline 2)
-  (insert (propertize (format "Game ended. Score: %s" key-quiz--score)
-		      'font-lock-face 'bold))
-  (newline)
-  (insert "Press 'r' to start a new game."))
+      (newline))))
+
+(defun key-quiz--run (ask-fn)
+  "Run the game.
+Ask the user questions using ASK-FN, which should be a function
+returning (SCORE . CORRECT-ANSWER)."
+  (let (exit-code)
+    (setq exit-code (key-quiz--game-loop ask-fn))
+    (newline 2)
+    (if (eq exit-code 'pause)
+	(progn
+	  (insert (propertize "Game paused." 'font-lock-face 'bold))
+	  (newline)
+	  (insert "Press 'c' to resume the game, 'r' to restart it.")
+	  (message nil)) ; Clear minibuffer
+      (insert (propertize (format "Game ended. Score: %s" key-quiz--score)
+			  'font-lock-face 'bold))
+      (newline)
+      (insert "Press 'r' to start a new game."))))
+
+(defun key-quiz--resume ()
+  "Resume a paused game."
+  (interactive)
+  (unless key-quiz--last-state
+    (error "The game has not been paused"))
+  (let ((inhibit-read-only t))
+    (newline 2)
+    (key-quiz--run (if key-quiz--game-reverse
+		       'key-quiz--ask-reverse
+		     'key-quiz--ask))))
 
 (defun key-quiz--restart (&optional reverse)
   "Restart the current game.
@@ -282,14 +340,21 @@ If REVERSE is non-nil, play the game in 'reverse mode'."
   (interactive)
   (setq key-quiz--keys (key-quiz--get-keys)
 	key-quiz--score 0
-	key-quiz--round 0)
+	key-quiz--round 0
+	key-quiz--last-state nil)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert (format "%s keys/commands loaded." (length key-quiz--keys)))
     (newline 2)
-    (key-quiz--game-loop (if (or reverse key-quiz--game-reverse)
-			     'key-quiz--ask-reverse
-			   'key-quiz--ask))))
+    (key-quiz--run (if (or reverse key-quiz--game-reverse)
+		       'key-quiz--ask-reverse
+		     'key-quiz--ask))))
+
+(defun key-quiz--quit ()
+  "Ask the player if they want to quit the game and kill the buffer."
+  (interactive)
+  (when (yes-or-no-p "Exit game and kill buffer? ")
+    (kill-this-buffer)))
 
 ;;;###autoload
 (defun key-quiz (reverse)
@@ -309,15 +374,16 @@ Instructions:
 - Points are substracted for incorrect answers.
   The minimum possible score is 0.
 - By default, 20 questions are asked per game.
-- Use 'r' to restart the game after quitting the prompt, and 'q' to
-  bury the buffer."
+- Use 'p RET' to pause the game and 'c' to resume it.
+- Use \\[keyboard-quit] to cancel the question prompt.  Then, use 'r' to start a
+  new game or 'q' to kill the buffer."
   (interactive "P")
   (let* ((buffer (get-buffer-create "*Key Quiz*")))
     (with-current-buffer buffer
       (unless (derived-mode-p 'key-quiz-mode)
 	(key-quiz-mode))
-      (switch-to-buffer buffer)
       (setq key-quiz--game-reverse reverse)
+      (switch-to-buffer buffer)
       (key-quiz--restart reverse))))
 
 (provide 'key-quiz)

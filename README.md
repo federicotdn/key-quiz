@@ -2,7 +2,7 @@
 [![Melpa Status](http://melpa.milkbox.net/packages/key-quiz-badge.svg)](http://melpa.milkbox.net/#/key-quiz)
 ![Melpa Status](https://img.shields.io/github/license/federicotdn/key-quiz.svg)
 
-Key Quiz is a game for GNU Emacs where the player must type in key sequences corresponding to different Emacs commands, chosen at random.
+Key Quiz is a game for GNU Emacs (26+) where the player must type in key sequences corresponding to different Emacs commands, chosen at random.
 
 The game includes a variant, called "reverse mode", where the user is given a key sequence and then must answer with the corresponding command.
 

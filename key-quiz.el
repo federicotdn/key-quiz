@@ -72,6 +72,9 @@
 (defvar-local key-quiz--last-state nil
   "Last game state. Used for resuming.")
 
+(defvar-local key-quiz--prompt-pos nil
+  "Buffer position of last prompt. Used when deleting Pause text.")
+
 (defface key-quiz-question '((t :inherit bold))
   "Face for Key Quiz questions.")
 
@@ -199,6 +202,7 @@ answer correctly, or nil otherwise."
 	;; same command more than once.
 	(setf key-quiz--keys (cl-delete key key-quiz--keys
 					:key #'car :test #'equal))))
+    (setq key-quiz--prompt-pos (point))
     (insert (format "Enter key for command: %s"
 		    (propertize command 'font-lock-face 'key-quiz-question)))
     (newline)
@@ -255,6 +259,7 @@ the user did not answer correctly, or nil otherwise."
     (when hints
       (push command hints)
       (key-quiz--shuffle-list hints))
+    (setq key-quiz--prompt-pos (point))
     (insert (format "Enter command for key: %s "
 		    (propertize key 'font-lock-face 'key-quiz-question)))
     (newline)
@@ -329,7 +334,8 @@ returning (SCORE . CORRECT-ANSWER)."
   (unless key-quiz--last-state
     (error "The game has not been paused"))
   (let ((inhibit-read-only t))
-    (newline 2)
+    (delete-region key-quiz--prompt-pos (point-max))
+    (setq key-quiz--prompt-pos nil)
     (key-quiz--run (if key-quiz--game-reverse
 		       'key-quiz--ask-reverse
 		     'key-quiz--ask))))
@@ -341,7 +347,8 @@ If REVERSE is non-nil, play the game in 'reverse mode'."
   (setq key-quiz--keys (key-quiz--get-keys)
 	key-quiz--score 0
 	key-quiz--round 0
-	key-quiz--last-state nil)
+	key-quiz--last-state nil
+	key-quiz--prompt-pos nil)
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert (format "%s keys/commands loaded." (length key-quiz--keys)))

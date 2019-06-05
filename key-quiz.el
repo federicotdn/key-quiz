@@ -179,13 +179,13 @@ share, and EQUALS is (string= K1 K2)."
     (cons (length (split-string k1)) t)))
 
 (defun key-quiz--function-description (fn)
-  "Get a short description of function FN.
-Return a string with the description or nil if no documentation is
-available."
+  "Get a short description of function FN."
   (let ((doc (documentation (intern-soft fn))))
-    (when doc
-      (string-match "^\\(.+?\\.\\)" doc)
-      (match-string 1 doc))))
+    (if doc
+	(progn
+	  (string-match "^\\(.+?\\.\\)$" doc)
+	  (match-string 1 doc))
+      "(Documentation unavailable)")))
 
 (defun key-quiz--ask ()
   "Prompt the user for a key corresponding to a command.
@@ -224,10 +224,9 @@ answer correctly, or nil otherwise."
     (insert "Enter key for command:")
     (newline 2)
     (insert "    " (propertize command 'font-lock-face 'key-quiz-question))
-    (let ((desc (key-quiz--function-description command)))
-      (when desc
-	(newline)
-	(insert "    " (propertize desc 'font-lock-face 'italic))))
+    (newline)
+    (insert "    " (propertize (key-quiz--function-description command)
+			       'font-lock-face 'italic))
     (newline 2)
     (when (> (length keys) 1)
       (insert (format "There are %s possible answers." (length keys)))

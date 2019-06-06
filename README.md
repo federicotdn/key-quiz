@@ -19,7 +19,7 @@ To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>. More detailed 
 
 ## Screenshots
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/6868935/58520870-47b79c80-8190-11e9-8c71-05af76076a6f.png" alt="Key Quiz" title="" />
+  <img src="https://user-images.githubusercontent.com/6868935/59036677-1f8e0480-8846-11e9-9087-93058a35ce71.png" alt="Key Quiz" title="" />
 </p>
 
 ## License

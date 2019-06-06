@@ -22,6 +22,13 @@ To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>. More detailed 
   <img src="https://user-images.githubusercontent.com/6868935/59036677-1f8e0480-8846-11e9-9087-93058a35ce71.png" alt="Key Quiz" title="" />
 </p>
 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/6868935/59046014-89fb7080-8857-11e9-9d19-eed1465c2bac.png" alt="Key Quiz" title="" />
+</p>
+
+## Alternatives
+- [keywiz.el](https://github.com/deestan/emacs/blob/master/emacs-goodies-el/keywiz.el) - Emacs key sequence quiz by Jesper Harder.
+
 ## License
 Copyright © 2019 Federico Tedin.
 

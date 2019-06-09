@@ -58,6 +58,11 @@
   "Number of questions per game."
   :type 'integer)
 
+(defcustom key-quiz-matching-regexp "^<?[MC]"
+  "Regexp used to match valid mappings in the quiz.
+The regexp should start with ^ and be valid for `delete-non-matching-lines'."
+  :type 'string)
+
 (defcustom key-quiz--mode 'fundamental-mode
   "Mode to use when fetching key list."
   :type 'function)
@@ -130,7 +135,7 @@ list is generated using `describe-buffer-bindings' on
       (funcall key-quiz--mode)
       (describe-buffer-bindings (current-buffer))
       (goto-char (point-min))
-      (delete-non-matching-lines "^<?[MC]")
+      (delete-non-matching-lines key-quiz-matching-regexp)
       (delete-matching-lines
        "Prefix Command\\|Keyboard Macro\\|mouse\\|C-g\\|\\.\\.")
       (while (not (eobp))

@@ -28,6 +28,7 @@ To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>. More detailed 
 
 ## Alternatives
 - [keywiz.el](https://github.com/deestan/emacs/blob/master/emacs-goodies-el/keywiz.el) - Emacs key sequence quiz by Jesper Harder.
+- [shortcutFoo](https://www.shortcutfoo.com/) - Learn shortcuts and commands.
 
 ## License
 Copyright © 2019 Federico Tedin.

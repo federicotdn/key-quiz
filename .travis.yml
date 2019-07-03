@@ -2,6 +2,7 @@
 
 language: generic
 sudo: false
+dist: xenial
 
 env:
   matrix:

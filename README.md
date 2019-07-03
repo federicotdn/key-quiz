@@ -15,7 +15,7 @@ You can install Key Quiz by using the `package-install` command (make sure [MELP
 Alternatively, you can just add `key-quiz.el` to your `load-path`.
 
 ## Playing
-To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>. More detailed instructions can be found at <kbd>C-h f</kbd> `key-quiz` <kbd>[RET]</kbd>.
+To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>. Alternatively, the `key-quiz` function can be called specifying the `REVERSE` and `KEYS` arguments. More detailed instructions can be found at <kbd>C-h f</kbd> `key-quiz` <kbd>[RET]</kbd>.
 
 ## Screenshots
 <p align="center">

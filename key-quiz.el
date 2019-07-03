@@ -76,6 +76,9 @@ The regexp should start with ^ and be valid for `delete-non-matching-lines'."
 (defvar-local key-quiz--game-reverse nil
   "Non-nil if currently playing in 'reverse mode'.")
 
+(defvar-local key-quiz--custom-keys nil
+  "Custom key-command alist specified by the user.")
+
 (defvar-local key-quiz--round 0
   "Current round number.")
 
@@ -371,11 +374,11 @@ returning (SCORE . CORRECT-ANSWER)."
 		       'key-quiz--ask-reverse
 		     'key-quiz--ask))))
 
-(defun key-quiz--restart (&optional reverse)
-  "Restart the current game.
-If REVERSE is non-nil, play the game in 'reverse mode'."
+(defun key-quiz--restart ()
+  "Restart the current game."
   (interactive)
-  (setq key-quiz--keys (key-quiz--get-keys)
+  (setq key-quiz--keys (or (copy-sequence key-quiz--custom-keys)
+			   (key-quiz--get-keys))
 	key-quiz--score 0
 	key-quiz--round 0
 	key-quiz--last-state nil
@@ -384,7 +387,7 @@ If REVERSE is non-nil, play the game in 'reverse mode'."
     (erase-buffer)
     (insert (format "%s keys/commands loaded." (length key-quiz--keys)))
     (newline 2)
-    (key-quiz--run (if (or reverse key-quiz--game-reverse)
+    (key-quiz--run (if key-quiz--game-reverse
 		       'key-quiz--ask-reverse
 		     'key-quiz--ask))))
 
@@ -395,7 +398,7 @@ If REVERSE is non-nil, play the game in 'reverse mode'."
     (kill-this-buffer)))
 
 ;;;###autoload
-(defun key-quiz (reverse)
+(defun key-quiz (&optional reverse keys)
   "Play a game of Key Quiz.
 
 Key Quiz is a game where the player must type in key sequences
@@ -405,6 +408,12 @@ The game includes a variant, called 'reverse mode', where the user is
 given a key sequence and then must answer with the corresponding
 command.  This mode is activated when called interactively with a
 prefix argument, or when REVERSE is non-nil.
+
+To KEYS argument can be used to specify a custom key-command list.
+The value of the argument must be an alist with each item having the
+form (KEY . COMMAND), where KEY should be a string in the format
+returned by commands such as `C-h k' (`describe-key'), and COMMAND
+should be a string representing the command bound to that key.
 
 Instructions:
 - Answer the questions as they are prompted.
@@ -420,9 +429,12 @@ Instructions:
     (with-current-buffer buffer
       (unless (derived-mode-p 'key-quiz-mode)
 	(key-quiz-mode))
-      (setq key-quiz--game-reverse reverse)
+      ;; These two variables shouldn't be modified when restarting the
+      ;; game.
+      (setq key-quiz--game-reverse reverse
+	    key-quiz--custom-keys keys)
       (switch-to-buffer buffer)
-      (key-quiz--restart reverse))))
+      (key-quiz--restart))))
 
 (provide 'key-quiz)
 ;;; key-quiz.el ends here

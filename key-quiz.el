@@ -60,11 +60,14 @@
 
 (defcustom key-quiz-matching-regexp "^<?[MC]"
   "Regexp used to match valid mappings in the quiz.
-The regexp should start with ^ and be valid for `delete-non-matching-lines'."
+The regexp should start with ^ and be valid for
+`delete-non-matching-lines'.  The regexp is not used when playing a
+custom game."
   :type 'string)
 
 (defcustom key-quiz--mode 'fundamental-mode
-  "Mode to use when fetching key list."
+  "Mode to use when fetching key-command list.
+This variable is ignored when playing a custom game."
   :type 'function)
 
 (defvar-local key-quiz--keys nil
@@ -132,7 +135,7 @@ Shows current score and more information on the header line."
 Many keys and commands are filtered out to only include those which
 the player is likely to remember or guess correctly.  The initial key
 list is generated using `describe-buffer-bindings' on
-`fundamental-mode'."
+`key-quiz--mode'."
   (let (keys)
     (with-temp-buffer
       (funcall key-quiz--mode)
@@ -413,7 +416,10 @@ To KEYS argument can be used to specify a custom key-command list.
 The value of the argument must be an alist with each item having the
 form (KEY . COMMAND), where KEY should be a string in the format
 returned by commands such as `C-h k' (`describe-key'), and COMMAND
-should be a string representing the command bound to that key.
+should be a string representing the command bound to that key.  If
+KEYS is omitted or nil, a key-command list will be generated from the
+output of running `describe-buffer-bindings' on a new buffer, set to
+mode `key-quiz--mode'.
 
 Instructions:
 - Answer the questions as they are prompted.

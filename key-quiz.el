@@ -65,7 +65,7 @@ The regexp should start with ^ and be valid for
 custom game."
   :type 'string)
 
-(defcustom key-quiz--mode 'fundamental-mode
+(defcustom key-quiz-use-mode 'fundamental-mode
   "Mode to use when fetching key-command list.
 This variable is ignored when playing a custom game."
   :type 'function)
@@ -135,10 +135,10 @@ Shows current score and more information on the header line."
 Many keys and commands are filtered out to only include those which
 the player is likely to remember or guess correctly.  The initial key
 list is generated using `describe-buffer-bindings' on
-`key-quiz--mode'."
+`key-quiz-use-mode'."
   (let (keys)
     (with-temp-buffer
-      (funcall key-quiz--mode)
+      (funcall key-quiz-use-mode)
       (describe-buffer-bindings (current-buffer))
       (goto-char (point-min))
       (delete-non-matching-lines key-quiz-matching-regexp)
@@ -443,7 +443,7 @@ not necessary for the commands to exist, or for the keys to be
 actually bound to those commands.  If KEYS is omitted or nil, a
 key-command list will be generated from the output of running
 `describe-buffer-bindings' on a new buffer, set to mode
-`key-quiz--mode'.
+`key-quiz-use-mode'.
 
 Instructions:
 - Answer the questions as they are prompted.

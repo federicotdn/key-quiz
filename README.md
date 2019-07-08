@@ -17,7 +17,9 @@ Alternatively, you can just add `key-quiz.el` to your `load-path`.
 ## Playing
 To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>.
 
-You can also play Key Quiz by calling the `key-quiz` function. By doing this, it is possible to pass a custom list of key-command pairs from which the player will be quizzed with. For example:
+By default, Key Quiz will quiz the player on keys set in Fundamental mode. This can be changed by setting the variable `key-quiz-use-mode` to another major mode command, such as `'org-mode`. Other aspects of the game can also be customized by configuring variables; see <kbd>M-x</kbd> `customize-group` <kbd>[RET]</kbd> `key-quiz` <kbd>[RET]</kbd>.
+
+You can also play Key Quiz by calling the `key-quiz` function directly. By doing this, it is possible to pass a custom list of key-command pairs from which the player will be quizzed with. For example:
 ```elisp
 (key-quiz nil '(("C-x f b"   . "foo-bar")
                 ("C-c b f f" . "bar-foo-foo")

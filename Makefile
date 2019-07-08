@@ -6,4 +6,7 @@ check:
 		      --eval '(checkdoc-current-buffer)' 2>&1 | $(NOOUTPUT)
 
 run:
-	emacs -q -l key-quiz.el
+	emacs -q -l key-quiz.el --eval '(key-quiz)'
+
+run-reverse:
+	emacs -q -l key-quiz.el --eval '(key-quiz t)'

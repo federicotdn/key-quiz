@@ -189,14 +189,15 @@ share, and EQUALS is (string= K1 K2)."
 	(cons matches nil))
     (cons (length (split-string k1)) t)))
 
-(defun key-quiz--function-description (fn)
-  "Get a short description of function FN."
-  (let ((doc (documentation (intern-soft fn))))
-    (if doc
+(defun key-quiz--command-description (cmd)
+  "Get a short description of command CMD.
+Returns nil if no description was found."
+  (let ((cmd-sym (intern-soft cmd)))
+    (when (commandp cmd-sym)
+      (let ((doc (documentation cmd-sym)))
 	(progn
-	  (string-match "^\\(.+?\\.\\)$" doc)
-	  (match-string 1 doc))
-      "(Documentation unavailable)")))
+	  (when (and doc (string-match "^\\(.+?\\.\\)$" doc))
+	    (match-string 1 doc)))))))
 
 (defun key-quiz--ask ()
   "Prompt the user for a key corresponding to a command.
@@ -235,9 +236,10 @@ answer correctly, or nil otherwise."
     (insert "Enter key for command:")
     (newline 2)
     (insert "    " (propertize command 'font-lock-face 'key-quiz-question))
-    (newline)
-    (insert "    " (propertize (key-quiz--function-description command)
-			       'font-lock-face 'italic))
+    (let ((description (key-quiz--command-description command)))
+      (when description
+	(newline)
+	(insert "    " (propertize description 'font-lock-face 'italic))))
     (newline 2)
     (when (> (length keys) 1)
       (insert (format "There are %s possible answers." (length keys)))
@@ -377,6 +379,15 @@ returning (SCORE . CORRECT-ANSWER)."
 		       'key-quiz--ask-reverse
 		     'key-quiz--ask))))
 
+(defun key-quiz--sentinel-command ()
+  "Noop command to bound custom keys to.
+When playing a custom game, the user may specify keys that are not
+bound to any command.  In order to read those keys using
+`read-key-sequence-vector', they need to be bound to something.  Bind
+them to this command on the local keymap."
+  (interactive)
+  nil)
+
 (defun key-quiz--restart ()
   "Restart the current game."
   (interactive)
@@ -386,6 +397,17 @@ returning (SCORE . CORRECT-ANSWER)."
 	key-quiz--round 0
 	key-quiz--last-state nil
 	key-quiz--prompt-pos nil)
+  ;; Bind all keys not currently bound to a command to
+  ;; `key-quiz--sentinel-command'. Use a copy of key-quiz-mode-map so
+  ;; that we can freely modify it. We do this to allow playing with
+  ;; keys not bound to anything.
+  (use-local-map (copy-keymap key-quiz-mode-map))
+  (dolist (key-command key-quiz--keys)
+    (message "%s" key-command)
+    (let ((key (car key-command)))
+      (when (integerp (lookup-key (current-local-map) (kbd key)))
+	(local-set-key (kbd key) 'key-quiz--sentinel-command))))
+  ;; Prepare buffer and start the game.
   (let ((inhibit-read-only t))
     (erase-buffer)
     (insert (format "%s keys/commands loaded." (length key-quiz--keys)))
@@ -416,10 +438,12 @@ To KEYS argument can be used to specify a custom key-command list.
 The value of the argument must be an alist with each item having the
 form (KEY . COMMAND), where KEY should be a string in the format
 returned by commands such as `C-h k' (`describe-key'), and COMMAND
-should be a string representing the command bound to that key.  If
-KEYS is omitted or nil, a key-command list will be generated from the
-output of running `describe-buffer-bindings' on a new buffer, set to
-mode `key-quiz--mode'.
+should be a string representing the command bound to that key.  It is
+not necessary for the commands to exist, or for the keys to be
+actually bound to those commands.  If KEYS is omitted or nil, a
+key-command list will be generated from the output of running
+`describe-buffer-bindings' on a new buffer, set to mode
+`key-quiz--mode'.
 
 Instructions:
 - Answer the questions as they are prompted.

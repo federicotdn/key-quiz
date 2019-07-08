@@ -17,7 +17,17 @@ Alternatively, you can just add `key-quiz.el` to your `load-path`.
 ## Playing
 To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>.
 
-You can also play Key Quiz by calling the `key-quiz` function. By doing this, it is possible to pass a custom list of key-command pairs from which the player will be quizzed with. More detailed instructions can be found at <kbd>C-h f</kbd> `key-quiz` <kbd>[RET]</kbd>.
+You can also play Key Quiz by calling the `key-quiz` function. By doing this, it is possible to pass a custom list of key-command pairs from which the player will be quizzed with. For example:
+```elisp
+(key-quiz nil '(("C-x f b"   . "foo-bar")
+                ("C-c b f f" . "bar-foo-foo")
+                ("C-c q b"   . "quux-baz")
+                ("C-x C-f"   . "find-file")
+                ("C-c q f"   . "quuz-foo")
+                ("C-c b q"   . "bar-quuz")))
+```
+
+More detailed instructions can be found at <kbd>C-h f</kbd> `key-quiz` <kbd>[RET]</kbd>.
 
 ## Screenshots
 <p align="center">

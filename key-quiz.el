@@ -379,15 +379,6 @@ returning (SCORE . CORRECT-ANSWER)."
 		       'key-quiz--ask-reverse
 		     'key-quiz--ask))))
 
-(defun key-quiz--sentinel-command ()
-  "Noop command to bound custom keys to.
-When playing a custom game, the user may specify keys that are not
-bound to any command.  In order to read those keys using
-`read-key-sequence-vector', they need to be bound to something.  Bind
-them to this command on the local keymap."
-  (interactive)
-  nil)
-
 (defun key-quiz--restart ()
   "Restart the current game."
   (interactive)
@@ -397,16 +388,15 @@ them to this command on the local keymap."
 	key-quiz--round 0
 	key-quiz--last-state nil
 	key-quiz--prompt-pos nil)
-  ;; Bind all keys not currently bound to a command to
-  ;; `key-quiz--sentinel-command'. Use a copy of key-quiz-mode-map so
-  ;; that we can freely modify it. We do this to allow playing with
-  ;; keys not bound to anything.
+  ;; Bind all keys not currently bound to a command to `ignore'. Use a
+  ;; copy of key-quiz-mode-map so that we can freely modify it. We do
+  ;; this to allow playing with keys not bound to anything.
   (use-local-map (copy-keymap key-quiz-mode-map))
   (dolist (key-command key-quiz--keys)
     (message "%s" key-command)
     (let ((key (car key-command)))
       (when (integerp (lookup-key (current-local-map) (kbd key)))
-	(local-set-key (kbd key) 'key-quiz--sentinel-command))))
+	(local-set-key (kbd key) 'ignore))))
   ;; Prepare buffer and start the game.
   (let ((inhibit-read-only t))
     (erase-buffer)

@@ -5,7 +5,7 @@
 
 Key Quiz is a game for GNU Emacs (26+) where the player must type in key sequences corresponding to different Emacs commands, chosen at random.
 
-The game includes a variant, called "reverse mode", where the user is given a key sequence and then must answer with the corresponding command.
+The game includes a variant, called "reverse mode", where the player is given a key sequence and then must answer with the corresponding command.
 
 ## Installation
 You can install Key Quiz by using the `package-install` command (make sure [MELPA](https://melpa.org/) is included in your package sources):

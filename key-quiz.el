@@ -26,9 +26,9 @@
 ;; Key Quiz is a game where the player must type in key sequences
 ;; corresponding to different Emacs commands, chosen at random.
 
-;; The game includes a variant, called "reverse mode", where the user
-;; is given a key sequence and then must answer with the corresponding
-;; command.
+;; The game includes a variant, called "reverse mode", where the
+;; player is given a key sequence and then must answer with the
+;; corresponding command.
 
 ;;; Code:
 
@@ -80,7 +80,7 @@ This variable is ignored when playing a custom game."
   "Non-nil if currently playing in 'reverse mode'.")
 
 (defvar-local key-quiz--custom-keys nil
-  "Custom key-command alist specified by the user.")
+  "Custom key-command alist specified by the player.")
 
 (defvar-local key-quiz--round 0
   "Current round number.")
@@ -200,13 +200,13 @@ Returns nil if no description was found."
 	    (match-string 1 doc)))))))
 
 (defun key-quiz--ask ()
-  "Prompt the user for a key corresponding to a command.
-A random element from `key-quiz--keys' is chosen, and the user is
-shown the chosen command.  The user must then guess one of the keys
+  "Prompt the player for a key corresponding to a command.
+A random element from `key-quiz--keys' is chosen, and the player is
+shown the chosen command.  The player must then guess one of the keys
 corresponding to the command (as there may be more than one).
 Finally, return (SCORE . CORRECT-ANSWER), where SCORE is a number
 \(positive or negative) which should be added to `key-quiz--score',
-and CORRECT-ANSWER is the correct answer in case the user did not
+and CORRECT-ANSWER is the correct answer in case the player did not
 answer correctly, or nil otherwise."
   (let* ((pair (if key-quiz--last-state
 		   (car key-quiz--last-state)
@@ -268,13 +268,13 @@ answer correctly, or nil otherwise."
     result))
 
 (defun key-quiz--ask-reverse ()
-  "Prompt the user for a command corresponding to a key ('reverse mode').
-A random element from `key-quiz--keys' is chosen, and the user is
-shown the chosen key.  The user must then guess the command
+  "Prompt the player for a command corresponding to a key.
+A random element from `key-quiz--keys' is chosen, and the player is
+shown the chosen key.  The player must then guess the command
 corresponding to the key.  Finally, return (SCORE . CORRECT-ANSWER),
 where SCORE is a number (positive or negative) which should be added
 to `key-quiz--score', and CORRECT-ANSWER is the correct answer in case
-the user did not answer correctly, or nil otherwise."
+the player did not answer correctly, or nil otherwise."
   (let* ((pair (if key-quiz--last-state
 		   (car key-quiz--last-state)
 		 (seq-random-elt key-quiz--keys)))
@@ -315,7 +315,7 @@ the user did not answer correctly, or nil otherwise."
 
 (defun key-quiz--game-loop (ask-fn)
   "Iterate until `key-quiz-game-length' rounds have passed.
-Ask the user questions using ASK-FN, which should be a function
+Ask the player questions using ASK-FN, which should be a function
 returing (SCORE . CORRECT-ANSWER).  Return t if the game was
 cancelled, nil if it ended normally, and `pause' if the game was
 paused."
@@ -348,7 +348,7 @@ paused."
 
 (defun key-quiz--run (ask-fn)
   "Run the game.
-Ask the user questions using ASK-FN, which should be a function
+Ask the player questions using ASK-FN, which should be a function
 returning (SCORE . CORRECT-ANSWER)."
   (let (exit-code)
     (setq exit-code (key-quiz--game-loop ask-fn))
@@ -419,8 +419,8 @@ returning (SCORE . CORRECT-ANSWER)."
 Key Quiz is a game where the player must type in key sequences
 corresponding to different Emacs commands, chosen at random.
 
-The game includes a variant, called 'reverse mode', where the user is
-given a key sequence and then must answer with the corresponding
+The game includes a variant, called 'reverse mode', where the player
+is given a key sequence and then must answer with the corresponding
 command.  This mode is activated when called interactively with a
 prefix argument, or when REVERSE is non-nil.
 

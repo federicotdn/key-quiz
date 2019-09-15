@@ -7,6 +7,7 @@ dist: xenial
 env:
   matrix:
     - EMACS_VERSION=26.2
+    - EMACS_VERSION=26.3
     - EMACS_VERSION=master
   allow_failures:
     - env: EMACS_VERSION=master

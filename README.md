@@ -45,6 +45,4 @@ More detailed instructions can be found at <kbd>C-h f</kbd> `key-quiz` <kbd>[RET
 - [shortcutFoo](https://www.shortcutfoo.com/) - Learn shortcuts and commands.
 
 ## License
-Copyright © 2019 Federico Tedin.
-
 Distributed under the GNU General Public License, version 3.

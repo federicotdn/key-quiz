@@ -1,6 +1,6 @@
 ;;; key-quiz.el --- Emacs Keys Quiz  -*- lexical-binding: t -*-
 
-;; Copyright (c) 2019 Federico Tedin
+;; Copyright (c) 2020 Federico Tedin
 
 ;; Author: Federico Tedin <federicotedin@gmail.com>
 ;; Homepage: https://github.com/federicotdn/key-quiz

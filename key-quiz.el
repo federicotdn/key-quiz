@@ -150,7 +150,9 @@ list is generated using `describe-buffer-bindings' on
 	  (string-match "\\(.+\\)[[:blank:]]+\\([^[:blank:]]+\\)" line)
 	  (let ((key (match-string 1 line))
 		(command (match-string 2 line)))
-	    (when (commandp (intern-soft command))
+	    ;; Do not include C-g in keys list
+	    (when (and (not (string= command "keyboard-quit"))
+		       (commandp (intern-soft command)))
 	      (push (cons (string-trim key) command) keys))))
 	(forward-line 1)))
     keys))

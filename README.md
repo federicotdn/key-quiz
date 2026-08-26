@@ -1,3 +1,5 @@
+
+
 # key-quiz
 [![MELPA](https://melpa.org/packages/key-quiz-badge.svg)](https://melpa.org/#/key-quiz)
 ![License](https://img.shields.io/github/license/federicotdn/key-quiz.svg)
@@ -18,7 +20,7 @@ To play Key Quiz, use <kbd>M-x</kbd> `key-quiz` <kbd>[RET]</kbd>.
 
 By default, Key Quiz will quiz the player on keys set in Fundamental mode. This can be changed by setting the variable `key-quiz-use-mode` to another major mode command, such as `'org-mode`. Other aspects of the game can also be customized by configuring variables; see <kbd>M-x</kbd> `customize-group` <kbd>[RET]</kbd> `key-quiz` <kbd>[RET]</kbd>.
 
-You can also play Key Quiz by calling the `key-quiz` function directly. By doing this, it is possible to pass a custom list of key-command pairs from which the player will be quizzed with. For example:
+You can also play Key Quiz by calling the `key-quiz` function directly. By doing this, it is possible to pass a custom list of key-command pairs from which the player will be quizzed. For example:
 ```elisp
 (key-quiz nil '(("C-x f b"   . "foo-bar")
                 ("C-c b f f" . "bar-foo-foo")
